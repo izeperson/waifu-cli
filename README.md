@@ -1,8 +1,7 @@
 # waifu-cli
 
 prints things in a terminal, kinda cool.
-built using rust
-uses waifu.pics api
+built using rust and uses waifu.pics api
 # --HOW TO RUN--
 1. Clone the git repository
 2. cd into "waifu-cli"
