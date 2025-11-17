@@ -53,7 +53,7 @@ fn pick_sfw(list: &[String]) -> String {
             }
         }
     }
-    terminal::disable_raw_mode().unwrap();
+    terminal::disable_raw_mode().unwr    sfw_sorted.sort(); // alphabetical orderap();
     list[index].clone()
 }
 
@@ -61,42 +61,33 @@ fn main() { // added alphabetical sorting for categories
     let mut stdout = stdout();
     let client = Client::new();
     execute!(stdout, terminal::Clear(ClearType::All), cursor::MoveTo(0,0)).unwrap();
-
     let ep: Endpoints = client
         .get(format!("{}/endpoints", API))
         .send()
         .unwrap()
         .json()
         .unwrap();
-
-    // create a sorted copy of the sfw list
     let mut sfw_sorted = ep.sfw.clone();
-    sfw_sorted.sort(); // alphabetical order
-
     let args: Vec<String> = std::env::args().collect();
     let choice = if args.len() > 1 {
         args[1].clone()
     } else {
         pick_sfw(&sfw_sorted)
     };
-
     let img: ImageResp = client
         .get(format!("{}/sfw/{}", API, choice))
         .send()
         .unwrap()
         .json()
         .unwrap();
-
     let bytes = client.get(&img.url).send().unwrap().bytes().unwrap();
     let menu_height = sfw_sorted.len() + 3;
     execute!(stdout, cursor::MoveTo(0, menu_height as u16)).unwrap();
-
     let mut child = Command::new("kitty")
         .args(["+kitten", "icat"])
         .stdin(Stdio::piped())
         .spawn()
         .expect("failed to run icat");
-
     child.stdin.as_mut().unwrap().write_all(&bytes).unwrap();
     child.wait().unwrap();
 }
