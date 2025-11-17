@@ -8,7 +8,7 @@ built using rust and uses waifu.pics api
 3. Press enter on the prompts and wait for it to build.
 4. After installation is completed, use the ```waifu``` command to use the program.
 # Installation (Other Distros)
-1. Clone the git repository
+1. Clone the git repository ```git clone https://github.com/izeperson/waifu-cli```
 2. cd into "waifu-cli"
 3. Run ```chmod +x run.sh``` to give executable perms to the sh file
 4. Use ```sh run.sh``` or ```./run.sh``` to start setup.
