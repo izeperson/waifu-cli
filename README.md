@@ -2,7 +2,7 @@
 
 prints things in a terminal, kinda cool.
 built using rust and uses waifu.pics api
-# Installation (Arch Linux)
+# Installation (Arch GNU/Linux)
 1. Install [yay](https://github.com/Jguer/yay?tab=readme-ov-file#installation) (if you don't have it already)
 2. Run ```yay -S waifu```
 # Installation (Other Distros)
