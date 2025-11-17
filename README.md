@@ -3,7 +3,7 @@
 prints things in a terminal, kinda cool.
 built using rust and uses waifu.pics api
 # Installation (Arch Linux)
-1. Install an AUR helper, [yay](https://github.com/Jguer/yay?tab=readme-ov-file#installation) for this example.
+1. Install an [AUR helper](https://wiki.archlinux.org/title/AUR_helpers), [yay](https://github.com/Jguer/yay?tab=readme-ov-file#installation) for this example.
 2. Run ```yay -S waifu```
 3. Press enter on the prompts and wait for it to build.
 4. After installation is completed, use the ```waifu``` command to use the program.
