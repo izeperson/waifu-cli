@@ -42,8 +42,8 @@ fn pick_sfw(list: &[String]) -> String {
         stdout.flush().unwrap();
         if let Event::Key(key) = event::read().unwrap() {
             match key.code {
-                KeyCode::Up => if index > 0 { index -= 1 },
-                KeyCode::Down => if index + 1 < list.len() { index += 1 },
+                KeyCode::Up => index = if index == 0 { list.len() - 1 } else { index - 1 },
+                KeyCode::Down => index = if index == list.len() - 1 { 0 } else { index + 1 },
                 KeyCode::Enter => break,
                 KeyCode::Esc => {
                     terminal::disable_raw_mode().unwrap();
