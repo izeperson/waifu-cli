@@ -1,7 +1,7 @@
 # waifu-cli
-
 prints things in a terminal, kinda cool.
 built using rust and uses waifu.pics api
+<img width="450" height="371" alt="new2" src="https://github.com/user-attachments/assets/129e5ff4-1623-41fe-973b-b89952a75291" />
 # Installation (Arch Linux)
 1. Install an AUR helper, [yay](https://github.com/Jguer/yay?tab=readme-ov-file#installation) for this example.
 2. Run ```yay -S waifu```
