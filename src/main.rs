@@ -53,7 +53,7 @@ fn pick_sfw(list: &[String]) -> String {
             }
         }
     }
-    terminal::disable_raw_mode().unwr    sfw_sorted.sort(); // alphabetical orderap();
+    terminal::disable_raw_mode().unwrap();
     list[index].clone()
 }
 
@@ -68,6 +68,7 @@ fn main() { // added alphabetical sorting for categories
         .json()
         .unwrap();
     let mut sfw_sorted = ep.sfw.clone();
+    sfw_sorted.sort();
     let args: Vec<String> = std::env::args().collect();
     let choice = if args.len() > 1 {
         args[1].clone()
