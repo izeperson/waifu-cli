@@ -22,7 +22,8 @@ fn pick_sfw(list: &[String]) -> String {
         for (i, item) in list.iter().enumerate() {
             if i == index {
                 queue!(handle, SetForegroundColor(Color::Yellow)).unwrap();
-                write!(handle, "> {}",{item}; queue!(handle, ResetColor).unwrap();
+                write!(handle, "> {}", item).unwrap();
+                queue!(handle, ResetColor).unwrap();
             } else {
                 write!(handle, "  {}", item).unwrap();
             }
@@ -59,7 +60,10 @@ fn main() {
     let img: ImageResp = client.get(format!("{}/sfw/{}", API, choice)).send().unwrap().json().unwrap();
     let mut child = Command::new("kitty").args(["+kitten", "icat"]).stdin(Stdio::piped()).spawn().expect("failed to run icat");
     let mut resp = client.get(&img.url).send().unwrap();
-    resp.copy_to(&mut child.stdin.as_mut().unwrap()).unwrap();
+    {
+        let stdin = child.stdin.as_mut().expect("failed to open child stdin");
+        resp.copy_to(stdin).unwrap();
+    }
     let menu_height = sfw_sorted.len() + 3;
     execute!(stdout, cursor::MoveTo(0, menu_height as u16)).unwrap();
     child.wait().unwrap();
