@@ -22,8 +22,7 @@ fn pick_sfw(list: &[String]) -> String {
         for (i, item) in list.iter().enumerate() {
             if i == index {
                 queue!(handle, SetForegroundColor(Color::Yellow)).unwrap();
-                write!(handle, "> {}").unwrap();
-                queue!(handle, ResetColor).unwrap();
+                write!(handle, "> {}",{item}; queue!(handle, ResetColor).unwrap();
             } else {
                 write!(handle, "  {}", item).unwrap();
             }
