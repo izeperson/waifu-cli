@@ -57,7 +57,7 @@ fn pick_sfw(list: &[String]) -> String {
     list[index].clone()
 }
 
-fn main() {
+fn main() { // added alphabetical sorting for categories
     let mut stdout = stdout();
     let client = Client::new();
     execute!(stdout, terminal::Clear(ClearType::All), cursor::MoveTo(0,0)).unwrap();
@@ -67,11 +67,13 @@ fn main() {
         .unwrap()
         .json()
         .unwrap();
+    let mut sfw_sorted = ep.sfw.clone();
+    sfw_sorted.sort();
     let args: Vec<String> = std::env::args().collect();
     let choice = if args.len() > 1 {
         args[1].clone()
     } else {
-        pick_sfw(&ep.sfw)
+        pick_sfw(&sfw_sorted)
     };
     let img: ImageResp = client
         .get(format!("{}/sfw/{}", API, choice))
@@ -80,7 +82,7 @@ fn main() {
         .json()
         .unwrap();
     let bytes = client.get(&img.url).send().unwrap().bytes().unwrap();
-    let menu_height = ep.sfw.len() + 3;
+    let menu_height = sfw_sorted.len() + 3;
     execute!(stdout, cursor::MoveTo(0, menu_height as u16)).unwrap();
     let mut child = Command::new("kitty")
         .args(["+kitten", "icat"])
@@ -90,4 +92,3 @@ fn main() {
     child.stdin.as_mut().unwrap().write_all(&bytes).unwrap();
     child.wait().unwrap();
 }
-
