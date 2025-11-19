@@ -15,13 +15,14 @@ built using rust and uses waifu.pics api
 5. After setup is completed, use the ```waifu``` command to use the program.
 
 # Usage
-**Commands:**\
-\
-  -c, --category <name>   Fetch an image from a specific category\
-  -l, --list              List all available categories\
-  -s, --stats             Show request performance statistics\
-  -t, --test              Test API connectivity\
-  -h, --help              Show this help message\
+**Commands:**
+<pre>
+  -c, --category (name)   Fetch an image from a specific category
+  -l, --list              List all available categories
+  -s, --stats             Show request performance statistics
+  -t, --test              Test API connectivity
+  -h, --help              Show the help message
+</pre>
 \
 When running the program it will show a random (SFW) image based on the category you chose.\
 \
