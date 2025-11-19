@@ -141,7 +141,7 @@ fn main() {
 
 
 fn fetch_and_display_image(client: &Client, category: &str) {
-    loop {
+    loop { // image fetch/display section
         let img_result: Result<ImageResp, _> = client
             .get(format!("{}/sfw/{}", API, category))
             .send()
@@ -185,24 +185,39 @@ fn fetch_and_display_image(client: &Client, category: &str) {
             io::stdout().flush().unwrap();
 
             terminal::enable_raw_mode().unwrap();
-            if let Ok(Event::Key(key_event)) = event::read() {
-                terminal::disable_raw_mode().unwrap();
-                println!();
-
-                match key_event.code {
-                    KeyCode::Char('s') => {
-                        let filename = img.url.split('/').last().unwrap_or("image.jpg");
-                        if std::fs::write(filename, &bytes).is_ok() {
-                            println!("Image saved as {}", filename);
-                        } else {
-                            eprintln!("Error: Failed to save image.");
+            let mut continue_fetching = false;
+            'input: loop { // basic while loop, you would find this in python as while true:. 
+                if let Ok(Event::Key(key_event)) = event::read() {
+                    match key_event.code {
+                        KeyCode::Char('s') => {
+                            terminal::disable_raw_mode().unwrap();
+                            println!();
+                            let filename = img.url.split('/').last().unwrap_or("waifu.png");
+                            if std::fs::write(filename, &bytes).is_ok() {
+                                println!("Image saved as {}", filename);
+                            } else {
+                                eprintln!("Error: Failed to save image.");
+                            }
+                            print!("[s]ave | [n]ext | [enter/q] quit: ");
+                            io::stdout().flush().unwrap();
+                            terminal::enable_raw_mode().unwrap();
+                            continue 'input;
                         }
-                        break;
+                        KeyCode::Char('n') => {
+                            continue_fetching = true;
+                            break 'input;
+                        }
+                        KeyCode::Enter | KeyCode::Char('q') | _ => {
+                            break 'input;
+                        }
                     }
-                    KeyCode::Char('n') => continue,
-                    KeyCode::Enter | KeyCode::Char('q') => break,
-                    _ => break,
                 }
+            }
+            terminal::disable_raw_mode().unwrap();
+            println!();
+
+            if !continue_fetching {
+                break;
             }
         } else {
             println!("Failed to display image. Is kitty terminal installed?");
