@@ -1,4 +1,4 @@
-// waifu-cli, developed by izeperson + techdude3000
+// waifu-cli, developed by izeperson + techdude3000 + Shinobitactics1
 use reqwest::blocking::Client;
 use serde::Deserialize;
 use std::io::{self, Write};
