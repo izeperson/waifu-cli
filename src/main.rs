@@ -15,7 +15,7 @@ const API: &str = "https://api.waifu.pics";
 
 #[derive(Debug, Deserialize)]
 struct Endpoints {
-    sfw: Vec<String>, // there will be NO nsfw stuff in this program
+    nsfw: Vec<String>, // there will be NO nsfw stuff in this program
 }
 
 #[derive(Debug, Deserialize)]
@@ -39,7 +39,7 @@ fn main() {
         }
     };
 
-    let mut categories = ep.sfw;
+    let mut categories = ep.nsfw;
     categories.sort();
 
     let args: Vec<String> = std::env::args().collect();
@@ -66,7 +66,7 @@ fn main() {
             let meta_start = Instant::now();
             let test_category = "waifu";
             let img_resp = client
-                .get(format!("{}/sfw/{}", API, test_category))
+                .get(format!("{}/nsfw/{}", API, test_category))
                 .send()
                 .and_then(|resp| resp.json::<ImageResp>());
 
@@ -95,7 +95,7 @@ fn main() {
                 std::process::exit(1);
             }
             let test_category = &categories[0];
-            match client.get(format!("{}/sfw/{}", API, test_category)).send() {
+            match client.get(format!("{}/nsfw/{}", API, test_category)).send() {
                 Ok(response) if response.status().is_success() => {
                     println!("Test successful! Fetched an image from '{}'.", test_category);
                 }
@@ -143,7 +143,7 @@ fn main() {
 fn fetch_and_display_image(client: &Client, category: &str) {
     loop { // image fetch/display section
         let img_result: Result<ImageResp, _> = client
-            .get(format!("{}/sfw/{}", API, category))
+            .get(format!("{}/nsfw/{}", API, category))
             .send()
             .and_then(|resp| resp.json());
 
