@@ -1,14 +1,14 @@
 # waifu-cli
 prints things in a terminal, kinda cool.
-built using rust and uses waifu.pics api
+built using rust and uses waifu.pics api\
 <img width="450" height="371" alt="waifu-cli" src="https://github.com/user-attachments/assets/129e5ff4-1623-41fe-973b-b89952a75291" />
 # Installation (Arch Linux)
 1. Install an AUR helper, [yay](https://github.com/Jguer/yay?tab=readme-ov-file#installation) for this example.
 2. Run ```yay -S waifu```
 3. Press enter on the prompts and wait for it to build.
 4. After installation is completed, use the ```waifu``` command to use the program.
-# Installation (Other Distros)
-1. Clone the git repository ```git clone https://github.com/izeperson/waifu-cli```
+# Installation (Other Distros + macOS)
+1. Clone the git repository ```git clone https://github.com/izeperson/waifu-cli``` (If you are using macOS you will need to [manually install rust](https://rust-lang.org/tools/install/))
 2. cd into "waifu-cli"
 3. Run ```chmod +x run.sh``` to give executable perms to the sh file
 4. Use ```sh run.sh``` or ```./run.sh``` to start setup.
