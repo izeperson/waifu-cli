@@ -23,6 +23,8 @@ built using rust and uses waifu.pics api\
   -t, --test              Test API connectivity
   -h, --help              Show the help message
 </pre>
+[kitty](https://sw.kovidgoyal.net/kitty/binary/) is the preferred terminal due to its ability to display images and animated GIFs.\
+\
 When running the program it will show a random (SFW) image based on the category you chose.\
 \
 You can use 's' to save the image (the image will be put in your current directory), 'n' to see another image and enter or 'q' to quit.\
