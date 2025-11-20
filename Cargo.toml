@@ -9,3 +9,4 @@ serde = { version = "1", features = ["derive"] }
 crossterm = "0.27"
 zeroize = "1.7"
 bytes = "1.5"
+rand = "0.8"
