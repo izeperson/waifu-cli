@@ -11,7 +11,7 @@ use std::time::Instant;
 use zeroize::Zeroize;
 use std::process::{Command, Stdio};
 
-const API: &str = "https://api.waifu.pics";
+const API: &str = "https://api.waifu.pics"; // in the future, there will be the option to change the API to whatever other REST API you want.
 
 #[derive(Debug, Deserialize)]
 struct Endpoints {
