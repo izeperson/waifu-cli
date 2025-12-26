@@ -31,4 +31,6 @@ When running the program it will show a random (SFW) image based on the category
 Images are provided by the [waifu.pics API](https://waifu.pics/docs)\
 \
 You can use 's' to save the image (the image will be put in your current directory), 'n' to see another image and enter or 'q' to quit.\
-<img width="968" height="832" alt="example of waifu -c smug" src="https://github.com/user-attachments/assets/5397fa64-e345-4504-9833-75d1af90eb38" />
+<img width="968" height="832" alt="example of waifu -c smug" src="https://github.com/user-attachments/assets/5397fa64-e345-4504-9833-75d1af90eb38" />\
+\
+Some of the images may be suggestive.
