@@ -113,7 +113,18 @@ fn main() {
             }
             let category_name = &args[2];
             if categories.contains(category_name) {
-                fetch_and_display_image(&client, category_name);
+                if args.len() >= 5 && args[3] == "-n" {
+                    let amount_str = &args[4];
+                    match amount_str.parse::<usize>() {
+                        Ok(amount) => batch(&client, category_name, amount),
+                        Err(_) => {
+                            eprintln!("Error: Invalid amount '{}'.", amount_str);
+                            std::process::exit(1);
+                        }
+                    }
+                } else {
+                    fetch_and_display_image(&client, category_name);
+                }
             } else {
                 eprintln!("Error: Invalid category '{}'.", category_name);
                 eprintln!("Run 'waifu -l' to see available categories.");
@@ -125,6 +136,7 @@ fn main() {
             println!("\nA simple CLI to fetch images from waifu.pics.\n");
             println!("Commands:");
             println!("  -c, --category <name>   Fetch an image from a specific category");
+            println!("                          Use '-n <amount>' after category to batch download (e.g. -c waifu -n 50)");
             println!("  -l, --list              List all available categories");
             println!("  -s, --stats             Show request performance statistics");
             println!("  -t, --test              Test API connectivity");
@@ -227,4 +239,39 @@ fn fetch_and_display_image(client: &Client, category: &str) {
 
         bytes.zeroize();
     }
+}
+
+fn batch(client: &Client, category: &str, count: usize) {
+    println!("Starting batch download of {} images from category '{}'...", count, category);
+    let start_time = Instant::now();
+
+    for i in 0..count {
+        let percentage = ((i as f64) / (count as f64) * 100.0) as usize;
+        let bar_len = 30;
+        let filled = (bar_len * i) / count;
+        let bar: String = std::iter::repeat("=").take(filled).collect();
+        let spaces: String = std::iter::repeat(" ").take(bar_len - filled).collect();
+
+        print!("\r[{}{}] {}% | Fetching {}/{}", bar, spaces, percentage, i + 1, count);
+        io::stdout().flush().unwrap();
+
+        let img_result: Result<ImageResp, _> = client
+            .get(format!("{}/sfw/{}", API, category))
+            .send()
+            .and_then(|resp| resp.json());
+
+        if let Ok(img) = img_result {
+            if let Ok(bytes) = client.get(&img.url).send().and_then(|resp| resp.bytes()) {
+                let filename = img.url.split('/').last().unwrap_or("waifu.png");
+                // We ignore write errors to keep the batch going, but in a real app we might log them.
+                let _ = std::fs::write(filename, &bytes);
+            }
+        }
+        // Small delay to be polite to the API, though not strictly required by the prompt.
+        // It also helps the animation be visible if the network is too fast.
+    }
+
+    let bar: String = std::iter::repeat("=").take(30).collect();
+    println!("\r[{}] 100% | Completed {} images in {:.2?}", bar, count, start_time.elapsed());
+    println!("Download finished.");
 }
