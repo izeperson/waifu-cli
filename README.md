@@ -22,6 +22,7 @@ built using rust and uses waifu.pics api\
   -s, --stats             Show request performance statistics
   -t, --test              Test API connectivity
   -h, --help              Show the help message
+  -n                      Download multiple images
 </pre>
 [kitty](https://sw.kovidgoyal.net/kitty/binary/) is the preferred terminal due to its ability to display images and animated GIFs.\
 \
