@@ -4,7 +4,7 @@ version = "0.1.5"
 edition = "2021"
 
 [dependencies]
-reqwest = { version = "0.13", features = ["blocking", "json"] }
+reqwest = { version = "0.12", features = ["blocking", "json"] }
 serde = { version = "1.0", features = ["derive"] }
 crossterm = "0.29"
 zeroize = "1.7"
