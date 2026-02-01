@@ -1,3 +1,4 @@
+// waifu-cli, developed by izeperson + techdude3000
 use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
