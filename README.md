@@ -19,7 +19,6 @@ built using rust and uses waifu.pics api\
 <pre>
   -c, --category (name)   Fetch an image from a specific category
   -l, --list              List all available categories
-  -s, --stats             Show request performance statistics
   -t, --test              Test API connectivity
   -h, --help              Show the help message
   -n                      Download multiple images
