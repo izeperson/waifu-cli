@@ -14,11 +14,12 @@ use crossterm::{
     terminal,
 };
 use zeroize::Zeroize;
+use api::CATEGORIES;
 
 mod api;
-use api::{fetch_endpoints, fetch_image};
+use api::{fetch_endpoints, fetch_image, build_client};
 
-const API: &str = "https://api.waifu.pics";
+const API: &str = "https://nekos.best/api/v2";
 
 #[derive(Serialize)]
 struct ManyPayload {
@@ -49,11 +50,11 @@ fn show_stats(client: &Client, categories: &[String]) {
 
     let category = &categories[0];
 
-    let img: ImageResp = match client.get(&format!("{}/sfw/{}", API, category))
+    let img: ImageResp = match client.get(&format!("{}/{}", API, category))
         .send()
         .and_then(|r| r.json()) {
         Ok(i) => i,
-        Err(_) => {
+        Err(e) => {
             println!("{RED}Program Test: Failed{RESET}");
             println!("Failed to fetch image metadata for '{}'", category);
             return;
@@ -64,7 +65,7 @@ fn show_stats(client: &Client, categories: &[String]) {
 
     let bytes = match client.get(&img.url).send().and_then(|r| r.bytes()) {
         Ok(b) => b,
-        Err(_) => {
+        Err(e) => {
             println!("{RED}Program Test: Failed{RESET}");
             println!("Failed to download image from '{}'", img.url);
             return;
@@ -74,12 +75,12 @@ fn show_stats(client: &Client, categories: &[String]) {
     println!("Size: {:.2} KB", bytes.len() as f64 / 1024.0);
 
     let payload = ManyPayload { exclude: vec![] };
-    let batch_resp: ManyResp = match client.post(&format!("{}/many/sfw/{}", API, category))
+    let batch_resp: ManyResp = match client.post(&format!("{}/{}", API, category))
         .json(&payload)
         .send()
         .and_then(|r| r.json()) {
         Ok(b) => b,
-        Err(_) => {
+        Err(e) => {
             println!("{RED}Program Test: Failed{RESET}");
             println!("Failed to fetch batch URLs.");
             return;
@@ -98,7 +99,7 @@ fn show_stats(client: &Client, categories: &[String]) {
 }
 
 fn main() {
-    let client = Client::new();
+    let client = build_client().unwrap_or_else(|e| { eprintln!("{}", e); std::process::exit(1); });
 
     let ep_result = fetch_endpoints(&client);
     let ep = match ep_result {
@@ -115,7 +116,8 @@ fn main() {
     let args: Vec<String> = std::env::args().collect();
 
     if args.len() < 2 {
-        print_help();
+        let category = CATEGORIES[rand::random::<usize>() % CATEGORIES.len()];
+        fetch_and_display_image(&client, category);
         return;
     }
 
@@ -143,7 +145,7 @@ fn main() {
                     let amount_str = &args[4];
                     match amount_str.parse::<usize>() {
                         Ok(amount) => batch_download(&client, category_name, amount),
-                        Err(_) => {
+                        Err(e) => {
                             eprintln!("Error: Invalid amount '{}'.", amount_str);
                             std::process::exit(1);
                         }
@@ -170,7 +172,7 @@ fn main() {
 
 fn print_help() {
     println!("Usage: waifu <command>");
-    println!("\nA simple CLI to fetch images from waifu.pics.\n");
+    println!("\nA simple CLI to fetch images from nekos.best.\n");
     println!("Commands:");
     println!("  -c, --category <name>   Fetch an image from a specific category");
     println!("  -n, --batch <amount>    Use '-n <amount>' after category to batch download (e.g. -c waifu -n 50)");
@@ -185,15 +187,15 @@ fn fetch_and_display_image(client: &Client, category: &str) {
 
         let img = match img_result {
             Ok(i) => i,
-            Err(_) => {
-                eprintln!("Error: Failed to fetch image metadata for category '{}'.", category);
+            Err(e) => {
+                eprintln!("Error: {}", e);
                 break;
             }
         };
 
         let mut bytes = match client.get(&img.url).send().and_then(|resp| resp.bytes()) {
             Ok(b) => b.to_vec(),
-            Err(_) => {
+            Err(e) => {
                 eprintln!("Error: Failed to download image from {}", img.url);
                 break;
             }
@@ -290,7 +292,7 @@ fn batch_download(client: &Client, category: &str, count: usize) {
 
     while urls.len() < count {
         let resp_result: Result<ManyResp, _> = client
-            .post(format!("{}/many/sfw/{}", API, category))
+            .post(format!("{}/{}", API, category))
             .json(&payload)
             .send()
             .and_then(|resp| resp.json());
@@ -338,7 +340,7 @@ fn batch_download(client: &Client, category: &str, count: usize) {
         let res_tx = res_tx.clone();
 
         handles.push(thread::spawn(move || {
-            let client = Client::new();
+            let client = build_client().unwrap_or_else(|e| { eprintln!("{}", e); std::process::exit(1); });
             loop {
                 let url = {
                     let lock = job_rx.lock().unwrap();
