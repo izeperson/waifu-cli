@@ -54,7 +54,7 @@ fn show_stats(client: &Client, categories: &[String]) {
         .send()
         .and_then(|r| r.json()) {
         Ok(i) => i,
-        Err(e) => {
+        Err(_e) => {
             println!("{RED}Program Test: Failed{RESET}");
             println!("Failed to fetch image metadata for '{}'", category);
             return;
@@ -65,7 +65,7 @@ fn show_stats(client: &Client, categories: &[String]) {
 
     let bytes = match client.get(&img.url).send().and_then(|r| r.bytes()) {
         Ok(b) => b,
-        Err(e) => {
+        Err(_e) => {
             println!("{RED}Program Test: Failed{RESET}");
             println!("Failed to download image from '{}'", img.url);
             return;
@@ -80,7 +80,7 @@ fn show_stats(client: &Client, categories: &[String]) {
         .send()
         .and_then(|r| r.json()) {
         Ok(b) => b,
-        Err(e) => {
+        Err(_e) => {
             println!("{RED}Program Test: Failed{RESET}");
             println!("Failed to fetch batch URLs.");
             return;
@@ -145,7 +145,7 @@ fn main() {
                     let amount_str = &args[4];
                     match amount_str.parse::<usize>() {
                         Ok(amount) => batch_download(&client, category_name, amount),
-                        Err(e) => {
+                        Err(_e) => {
                             eprintln!("Error: Invalid amount '{}'.", amount_str);
                             std::process::exit(1);
                         }
@@ -195,7 +195,7 @@ fn fetch_and_display_image(client: &Client, category: &str) {
 
         let mut bytes = match client.get(&img.url).send().and_then(|resp| resp.bytes()) {
             Ok(b) => b.to_vec(),
-            Err(e) => {
+            Err(_e) => {
                 eprintln!("Error: Failed to download image from {}", img.url);
                 break;
             }
