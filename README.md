@@ -11,7 +11,7 @@ built using rust and uses nekos.best api\
 1. Clone the git repository ```git clone https://github.com/izeperson/waifu-cli```
 2. cd into "waifu-cli"
 3. Run ```chmod +x run.sh``` to give executable perms to the sh file
-4. Use ```sh run.sh``` or ```./run.sh``` to start setup. (If you are using macOS you will need to [manually install rust](https://rust-lang.org/tools/install/))
+4. Use ```sh run.sh``` or ```./run.sh``` to start setup. (You may need to [install rust](https://rust-lang.org/tools/install/))
 5. After setup is completed, use the ```waifu``` command to use the program.
 
 # Usage
@@ -30,6 +30,4 @@ When running the program it will show a random (SFW) image based on the category
 Images are provided by the [nekos.best API](https://nekos.best/)\
 \
 You can use 's' to save the image (the image will be put in your current directory), 'n' to see another image and enter or 'q' to quit.\
-<img width="968" height="832" alt="example of waifu -c smug" src="https://github.com/user-attachments/assets/5397fa64-e345-4504-9833-75d1af90eb38" />\
-\
-Some of the images may be suggestive.
+<img width="968" height="832" alt="example of waifu -c smug" src="https://github.com/user-attachments/assets/5397fa64-e345-4504-9833-75d1af90eb38" />
