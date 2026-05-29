@@ -1,6 +1,6 @@
 # waifu-cli
 prints things in a terminal, kinda cool.
-built using rust and uses waifu.pics api\
+built using rust and uses nekos.best api\
 <img width="450" height="371" alt="waifu-cli" src="https://github.com/user-attachments/assets/129e5ff4-1623-41fe-973b-b89952a75291" />
 # Installation (Arch Linux)
 1. Install an AUR helper, [yay](https://github.com/Jguer/yay?tab=readme-ov-file#installation) for this example.
@@ -27,7 +27,7 @@ built using rust and uses waifu.pics api\
 \
 When running the program it will show a random (SFW) image based on the category you chose.\
 \
-Images are provided by the [waifu.pics API](https://waifu.pics/docs)\
+Images are provided by the [nekos.best API](https://nekos.best/)\
 \
 You can use 's' to save the image (the image will be put in your current directory), 'n' to see another image and enter or 'q' to quit.\
 <img width="968" height="832" alt="example of waifu -c smug" src="https://github.com/user-attachments/assets/5397fa64-e345-4504-9833-75d1af90eb38" />\

@@ -1,6 +1,6 @@
 // waifu-cli, developed by izeperson + techdude3000
 use reqwest::blocking::Client;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use std::collections::HashSet;
 use std::io::{self, Write};
 use std::process::{Command, Stdio};
@@ -21,14 +21,9 @@ use api::{fetch_endpoints, fetch_image, build_client};
 
 const API: &str = "https://nekos.best/api/v2";
 
-#[derive(Serialize)]
-struct ManyPayload {
-    exclude: Vec<String>,
-}
-
 #[derive(Debug, Deserialize)]
 struct ManyResp {
-    files: Vec<String>,
+    results: Vec<ImageResp>,
 }
 
 fn show_stats(client: &Client, categories: &[String]) {
@@ -50,8 +45,8 @@ fn show_stats(client: &Client, categories: &[String]) {
 
     let category = &categories[0];
 
-    let img: ImageResp = match client.get(&format!("{}/{}", API, category))
-        .send()
+    let batch: ManyResp = match client.get(&format!("{}/{}", API, category))
+        .send() 
         .and_then(|r| r.json()) {
         Ok(i) => i,
         Err(_e) => {
@@ -60,6 +55,7 @@ fn show_stats(client: &Client, categories: &[String]) {
             return;
         }
     };
+    let img = &batch.results[0];
     println!("Single Image Fetch: {}Passed{}", GREEN, RESET);
     println!("Image URL: {}", img.url);
 
@@ -74,10 +70,8 @@ fn show_stats(client: &Client, categories: &[String]) {
     println!("Image Bytes: {}OK{}", GREEN, RESET);
     println!("Size: {:.2} KB", bytes.len() as f64 / 1024.0);
 
-    let payload = ManyPayload { exclude: vec![] };
-    let batch_resp: ManyResp = match client.post(&format!("{}/{}", API, category))
-        .json(&payload)
-        .send()
+    let batch_resp: ManyResp = match client.get(&format!("{}/{}?amount=5", API, category))
+        .send() 
         .and_then(|r| r.json()) {
         Ok(b) => b,
         Err(_e) => {
@@ -87,12 +81,12 @@ fn show_stats(client: &Client, categories: &[String]) {
         }
     };
 
-    if batch_resp.files.len() < 2 {
+    if batch_resp.results.len() < 2 {
         println!("{RED}Program Test: Failed{RESET}");
         println!("Batch download returned less than 2 images.");
         return;
     }
-    println!("Batch Download ({} images): {}Passed{}", batch_resp.files.len(), GREEN, RESET);
+    println!("Batch Download ({} images): {}Passed{}", batch_resp.results.len(), GREEN, RESET);
 
     println!("Program Test: {}Passed{}", GREEN, RESET);
     println!("Time Taken: {:.2?}", start.elapsed());
@@ -288,24 +282,23 @@ fn batch_download(client: &Client, category: &str, count: usize) {
 
     let mut seen_urls: HashSet<String> = HashSet::new();
     let mut urls: Vec<String> = Vec::new();
-    let payload = ManyPayload { exclude: vec![] };
 
     while urls.len() < count {
+        let request_amount = std::cmp::min(count - urls.len(), 20);
         let resp_result: Result<ManyResp, _> = client
-            .post(format!("{}/{}", API, category))
-            .json(&payload)
+            .get(format!("{}/{}?amount={}", API, category, request_amount))
             .send()
             .and_then(|resp| resp.json());
 
         if let Ok(mut data) = resp_result {
-            if data.files.is_empty() {
+            if data.results.is_empty() {
                 break;
             }
 
-            data.files
-                .retain(|url| seen_urls.insert(url.clone()));
+            data.results
+                .retain(|img| seen_urls.insert(img.url.clone()));
 
-            urls.append(&mut data.files);
+            urls.extend(data.results.into_iter().map(|img| img.url));
         } else {
             break;
         }
@@ -349,11 +342,6 @@ fn batch_download(client: &Client, category: &str, count: usize) {
                         Err(_) => break,
                     }
                 };
-
-                if let Ok(bytes) = client.get(&url).send().and_then(|r| r.bytes()) {
-                    let filename = url.split('/').last().unwrap_or("waifu.png");
-                    let _ = std::fs::write(filename, &bytes);
-                }
 
                 let start = Instant::now();
                 if let Ok(bytes) = client.get(&url).send().and_then(|r| r.bytes()) {

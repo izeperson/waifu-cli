@@ -36,7 +36,7 @@ pub struct ImageResp {
 
 pub fn build_client() -> Result<Client, String> {
     Client::builder()
-        .user_agent("Mozilla/5.0 (X11; Linux x86_64; rv:124.0) Gecko/20100101 Firefox/124.0")
+        .user_agent("waifu-cli/0.1.5")
         .build()
         .map_err(|e| format!("Failed to build client: {}", e))
 }
@@ -52,6 +52,8 @@ pub fn fetch_image(client: &Client, category: &str) -> Result<ImageResp, String>
         .get(format!("{}/{}", API, category))
         .send()
         .map_err(|e| format!("Failed to fetch image: {}", e))?
+        .error_for_status()
+        .map_err(|e| format!("API returned an error: {}", e))?
         .json()
         .map_err(|e| format!("Failed to decode image response: {}", e))?;
 
