@@ -1,4 +1,3 @@
-// waifu-cli, developed by izeperson + techdude3000
 use reqwest::blocking::Client;
 use serde::Deserialize;
 use std::collections::HashSet;
@@ -10,7 +9,9 @@ use std::time::Instant;
 use crate::api::ImageResp;
 use crossterm::terminal::size;
 use crossterm::{
+    cursor::MoveToColumn,
     event::{self, Event, KeyCode},
+    execute,
     terminal,
 };
 use zeroize::Zeroize;
@@ -171,6 +172,7 @@ fn print_help() {
     println!("  -c, --category <name>   Fetch an image from a specific category");
     println!("  -n, --batch <amount>    Use '-n <amount>' after category to batch download (e.g. -c waifu -n 50)");
     println!("  -l, --list              List all available categories");
+    println!("  -o                      Open the image URL in the default system viewer");
     println!("  -t, --test              Test connectivity");
     println!("  -h, --help              Show this help message");
 }
@@ -195,77 +197,117 @@ fn fetch_and_display_image(client: &Client, category: &str) {
             }
         };
 
-        if let Ok((cols, _)) = size() {
-            let title = "--waifu-cli--";
-            let padding = cols.saturating_sub(title.len() as u16) / 2;
-            println!("{:padding$}{}", "", title, padding = padding as usize);
-            println!();
-        } else {
-            println!("--waifu-cli--\n");
-        }
+        let (cols, _) = size().unwrap_or((80, 24));
+        let title = "--waifu-cli--";
+        let title_padding = cols.saturating_sub(title.len() as u16) / 2;
 
-        if let Ok(mut child) = Command::new("kitty")
-            .args(["+kitten", "icat"])
-            .stdin(Stdio::piped())
-            .spawn()
-        {
-            if let Some(mut stdin) = child.stdin.take() {
-                let _ = stdin.write_all(&bytes);
+        let _ = execute!(io::stdout(), MoveToColumn(title_padding));
+        println!("{}", title);
+        println!();
+
+        let _ = execute!(io::stdout(), MoveToColumn(title_padding));
+let mut displayed = false;
+        let viewers = [
+            ("kitty", vec!["+kitten", "icat"]),
+            ("wezterm", vec!["imgcat"]),
+            ("viu", vec!["-"]),
+            ("chafa", vec!["-"]),
+        ];
+
+        for (cmd, args) in viewers {
+            let mut command = Command::new(cmd);
+            command.args(&args).stdin(Stdio::piped());
+
+            if cmd != "kitty" {
+                command.stdout(Stdio::piped());
             }
-            let _ = child.wait();
 
-            let mut continue_fetching = false;
-            terminal::enable_raw_mode().unwrap();
+            if let Ok(mut child) = command.spawn() {
+                if let Some(mut stdin) = child.stdin.take() {
+                    let _ = stdin.write_all(&bytes);
+                }
 
-            'input: loop {
-                let print_prompt = || {
-                    let prompt = "[s]ave | [n]ext | [enter/q] quit:";
-                    if let Ok((cols, _)) = size() {
-                        let padding = cols.saturating_sub(prompt.len() as u16) / 2;
-                        print!("{:padding$}{}", "", prompt, padding = padding as usize);
-                    } else {
-                        print!("{}", prompt);
+                if cmd != "kitty" {
+                    let mut output_bytes = Vec::new();
+                    if let Some(mut child_stdout) = child.stdout.take() {
+                        use std::io::Read;
+                        let _ = child_stdout.read_to_end(&mut output_bytes);
                     }
-                    io::stdout().flush().unwrap();
-                };
+                    let _ = child.wait();
 
-
-                print_prompt();
-
-                if let Ok(Event::Key(key_event)) = event::read() {
-                    match key_event.code {
-                        KeyCode::Char('s') => {
-                            terminal::disable_raw_mode().unwrap();
-                            let filename = img.url.split('/').last().unwrap_or("waifu.png");
-                            if std::fs::write(filename, &bytes).is_ok() {
-                                println!("Image saved as {}", filename);
-                            } else {
-                                eprintln!("Error: Failed to save image.");
-                            }
-                            print_prompt();
-                            terminal::enable_raw_mode().unwrap();
-                            continue 'input;
-                        }
-                        KeyCode::Char('n') => {
-                            continue_fetching = true;
-                            break 'input;
-                        }
-                        KeyCode::Enter | KeyCode::Char('q') | _ => {
-                            break 'input;
-                        }
+                    if !output_bytes.is_empty() {
+                        let _ = execute!(io::stdout(), MoveToColumn(title_padding));
+                        let _ = io::stdout().write_all(&output_bytes);
+                        let _ = io::stdout().flush();
+                        displayed = true;
+                        break;
                     }
+                } else {
+                    let _ = execute!(io::stdout(), MoveToColumn(title_padding));
+                    let _ = child.wait();
+                    displayed = true;
+                    break;
                 }
             }
+        }
 
-            terminal::disable_raw_mode().unwrap();
-            println!();
-
-            if !continue_fetching {
-                break;
-            }
-        } else {
-            println!("Failed to display image. Is kitty terminal installed?");
+        if !displayed {
+            println!("No terminal image viewer found (kitty, wezterm, viu, chafa).");
             println!("Image URL: {}", img.url);
+        }
+
+        let mut continue_fetching = false;
+        terminal::enable_raw_mode().unwrap();
+
+        'input: loop {
+            let print_prompt = || {
+                let prompt = "[s]ave | [o]pen | [n]ext | [q]uit:";
+                let (c, _) = size().unwrap_or((80, 24));
+                let p_padding = c.saturating_sub(prompt.len() as u16) / 2;
+                let _ = execute!(io::stdout(), MoveToColumn(p_padding));
+                print!("{}", prompt);
+                io::stdout().flush().unwrap();
+            };
+
+            print_prompt();
+
+            if let Ok(Event::Key(key_event)) = event::read() {
+                match key_event.code {
+                    KeyCode::Char('s') => {
+                        terminal::disable_raw_mode().unwrap();
+                        let filename = img.url.split('/').last().unwrap_or("waifu.png");
+                        if std::fs::write(filename, &bytes).is_ok() {
+                            println!("Image saved as {}", filename);
+                            println!();
+                        } else {
+                            eprintln!("Error: Failed to save image.");
+                        }
+                        terminal::enable_raw_mode().unwrap();
+                        continue 'input;
+                    }
+                    KeyCode::Char('o') => {
+                        let _ = if cfg!(target_os = "windows") {
+                            Command::new("cmd").args(["/C", "start", &img.url]).spawn()
+                        } else if cfg!(target_os = "macos") {
+                            Command::new("open").arg(&img.url).spawn()
+                        } else {
+                            Command::new("xdg-open").arg(&img.url).spawn()
+                        };
+                    }
+                    KeyCode::Char('n') => {
+                        continue_fetching = true;
+                        break 'input;
+                    }
+                    KeyCode::Enter | KeyCode::Char('q') => break 'input,
+                    _ => {}
+                }
+            }
+        }
+
+        terminal::disable_raw_mode().unwrap();
+        println!();
+
+        if !continue_fetching {
             break;
         }
 
