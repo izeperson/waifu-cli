@@ -1,0 +1,14 @@
+target/
+**/target/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+.DS_Store
+.vscode/
+.idea/
+*.log
+*.tmp
+*.temp
+Cargo.lock

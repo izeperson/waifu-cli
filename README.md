@@ -1,6 +1,6 @@
 # waifu-cli
 prints things in a terminal, kinda cool.
-built using rust and uses waifu.pics api\
+built using rust and uses nekos.best api\
 <img width="450" height="371" alt="waifu-cli" src="https://github.com/user-attachments/assets/129e5ff4-1623-41fe-973b-b89952a75291" />
 # Installation (Arch Linux)
 1. Install an AUR helper, [yay](https://github.com/Jguer/yay?tab=readme-ov-file#installation) for this example.
@@ -11,7 +11,7 @@ built using rust and uses waifu.pics api\
 1. Clone the git repository ```git clone https://github.com/izeperson/waifu-cli```
 2. cd into "waifu-cli"
 3. Run ```chmod +x run.sh``` to give executable perms to the sh file
-4. Use ```sh run.sh``` or ```./run.sh``` to start setup. (If you are using macOS you will need to [manually install rust](https://rust-lang.org/tools/install/))
+4. Use ```sh run.sh``` or ```./run.sh``` to start setup. (You may need to [install rust](https://rust-lang.org/tools/install/))
 5. After setup is completed, use the ```waifu``` command to use the program.
 
 # Usage
@@ -19,15 +19,15 @@ built using rust and uses waifu.pics api\
 <pre>
   -c, --category (name)   Fetch an image from a specific category
   -l, --list              List all available categories
-  -s, --stats             Show request performance statistics
   -t, --test              Test API connectivity
   -h, --help              Show the help message
+  -n                      Download multiple images
 </pre>
 [kitty](https://sw.kovidgoyal.net/kitty/binary/) is the preferred terminal due to its ability to display images and animated GIFs.\
 \
 When running the program it will show a random (SFW) image based on the category you chose.\
 \
-Images are provided by the [waifu.pics API](https://waifu.pics/docs)\
+Images are provided by the [nekos.best API](https://nekos.best/)\
 \
 You can use 's' to save the image (the image will be put in your current directory), 'n' to see another image and enter or 'q' to quit.\
 <img width="968" height="832" alt="example of waifu -c smug" src="https://github.com/user-attachments/assets/5397fa64-e345-4504-9833-75d1af90eb38" />
