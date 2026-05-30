@@ -12,10 +12,10 @@ built using rust and uses nekos.best api\
 2. cd into "waifu-cli"
 3. Build the project: ```cargo build --release``` (You may need to [install rust](https://rust-lang.org/tools/install/))
 4. Create a symlink in `~/.local/bin`:
-   ```bash
+   <pre>bash
    mkdir -p "$HOME/.local/bin"
    ln -sf "$PWD/target/release/waifu" "$HOME/.local/bin/waifu"
-   ```
+   </pre>
 5. Ensure `~/.local/bin` is in your `PATH`. After setup is completed, use the `waifu` command to use the program.
 
 # Usage
