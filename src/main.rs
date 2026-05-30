@@ -20,7 +20,7 @@ use api::CATEGORIES;
 mod api;
 use api::{fetch_endpoints, fetch_image, build_client, API};
 
-const VERSION: &str = "0.1.6";
+const VERSION: &str = "0.1.7";
 
 #[derive(Debug, Deserialize)]
 struct ManyResp {
