@@ -18,9 +18,8 @@ use zeroize::Zeroize;
 use api::CATEGORIES;
 
 mod api;
-use api::{fetch_endpoints, fetch_image, build_client};
+use api::{fetch_endpoints, fetch_image, build_client, API};
 
-const API: &str = "https://nekos.best/api/v2";
 const VERSION: &str = "0.1.6";
 
 #[derive(Debug, Deserialize)]
@@ -122,6 +121,53 @@ fn show_stats(client: &Client, categories: &[String]) {
     println!("Time Taken: {:.2?}", start.elapsed());
 }
 
+fn check_all_endpoints(client: &Client, categories: &[String]) {
+    if let Err(e) = client.get(API).send() {
+        eprintln!("Warning: Initial connectivity check to {} failed: {}", API, e);
+    }
+
+    println!("Thorough Connectivity Check ({} categories):", categories.len());
+    let start_time = Instant::now();
+    let (tx, rx) = mpsc::channel();
+    let mut handles = Vec::new();
+
+    for category in categories {
+        let category_clone = category.clone();
+        let tx_clone = tx.clone();
+        let thread_client = client.clone();
+
+        handles.push(thread::spawn(move || {
+            let url = format!("{}/{}", API, category_clone);
+            let is_success = if let Ok(resp) = thread_client.get(&url).send() {
+                resp.status().is_success()
+            } else {
+                false
+            };
+            tx_clone.send((category_clone, is_success)).unwrap();
+        }));
+    }
+    drop(tx);
+
+    let mut passed_count = 0;
+    for _ in 0..categories.len() {
+        if let Ok((category, is_success)) = rx.recv() {
+            print!("  Checking {:<12} ... ", category);
+            if is_success {
+                println!("\x1b[32mPASSED\x1b[0m");
+                passed_count += 1;
+            } else {
+                println!("\x1b[31mFAILED\x1b[0m");
+            }
+            io::stdout().flush().unwrap();
+        }
+    }
+
+    for handle in handles {
+        handle.join().unwrap();
+    }
+    println!("\nSummary: {}/{} endpoints are healthy. Time Taken: {:.2?}", passed_count, categories.len(), start_time.elapsed());
+}
+
 fn main() {
     let client = build_client().unwrap_or_else(|e| { eprintln!("{}", e); std::process::exit(1); });
 
@@ -183,6 +229,9 @@ fn main() {
         }
         "-t" | "--test" => {
             show_stats(&client, &categories);
+        }
+        "--check-links" => {
+            check_all_endpoints(&client, &categories);
         }
         "-c" | "--category" => {
             if args.len() < 3 {
@@ -450,7 +499,6 @@ fn fetch_and_display_image(client: &Client, category: &str, upscale: bool) {
                     _ => {}
                     },
                     Event::Resize(new_cols, new_rows) => {
-                        // Re-render the image with new dimensions
                         let _ = execute!(io::stdout(), terminal::Clear(terminal::ClearType::All), MoveTo(0, 0));
                         if !render_image(&bytes, new_cols, new_rows, true, upscale) {
                             println!("No terminal image viewer found (kitty, wezterm, viu, chafa).");
@@ -555,7 +603,7 @@ fn batch_download(client: &Client, category: &str, count: usize, filters: Downlo
 
                 let start = Instant::now();
                 let mut success = false;
-                for _ in 0..3 { // Retry up to 3 times
+                for _ in 0..3 {
                     if let Ok(bytes) = client.get(&url).send().and_then(|r| r.bytes()) {
                         let size_kb = bytes.len() as f64 / 1024.0;
                         let dims = get_image_dimensions(&bytes);
@@ -566,14 +614,21 @@ fn batch_download(client: &Client, category: &str, count: usize, filters: Downlo
 
                         if size_ok && width_ok && height_ok {
                             let filename = url.split('/').last().unwrap_or("waifu.png");
-                            let _ = std::fs::write(filename, &bytes);
-                            let elapsed = start.elapsed().as_secs_f64();
-                            let speed = bytes.len() as f64 / 1024.0 / elapsed;
-                            let _ = res_tx.send(speed);
-                            success = true;
-                            break;
+                            match std::fs::write(filename, &bytes) {
+                                Ok(_) => {
+                                    let elapsed = start.elapsed().as_secs_f64();
+                                    let speed = bytes.len() as f64 / 1024.0 / elapsed;
+                                    let _ = res_tx.send(speed);
+                                    success = true;
+                                    break;
+                                }
+                                Err(e) => {
+                                    eprintln!("\nError saving '{}': {}", filename, e);
+                                    break;
+                                }
+                            }
                         } else {
-                            break; // Filter failed, don't retry this URL
+                            break;
                         }
                     }
                     thread::sleep(std::time::Duration::from_millis(500));

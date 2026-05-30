@@ -1,8 +1,7 @@
-// waifu-cli, developed by izeperson + techdude3000
 use reqwest::blocking::Client;
 use serde::Deserialize;
 
-const API: &str = "https://nekos.best/api/v2";
+pub const API: &str = "https://nekos.best/api/v2";
 
 pub const CATEGORIES: &[&str] = &[
     "neko", "husbando", "kitsune", "waifu",
@@ -42,7 +41,7 @@ pub struct ImageResp {
 
 pub fn build_client() -> Result<Client, String> {
     Client::builder()
-        .user_agent("waifu-cli/0.1.5")
+        .user_agent("waifu-cli/0.1.6")
         .build()
         .map_err(|e| format!("Failed to build client: {}", e))
 }
