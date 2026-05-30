@@ -12,3 +12,4 @@ target/
 *.tmp
 *.temp
 Cargo.lock
+test_images/

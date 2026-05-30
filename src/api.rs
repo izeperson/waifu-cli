@@ -22,6 +22,9 @@ pub struct Endpoints {
 #[derive(Debug, Deserialize)]
 struct NekosImage {
     url: String,
+    artist_href: Option<String>,
+    artist_name: Option<String>,
+    source_url: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -32,6 +35,9 @@ struct NekosResp {
 #[derive(Debug, Deserialize)]
 pub struct ImageResp {
     pub url: String,
+    pub artist_name: Option<String>,
+    pub artist_href: Option<String>,
+    pub source_url: Option<String>,
 }
 
 pub fn build_client() -> Result<Client, String> {
@@ -48,10 +54,14 @@ pub fn fetch_endpoints(_client: &Client) -> Result<Endpoints, String> {
 }
 
 pub fn fetch_image(client: &Client, category: &str) -> Result<ImageResp, String> {
-    let resp: NekosResp = client
-        .get(format!("{}/{}", API, category))
-        .send()
-        .map_err(|e| format!("Failed to fetch image: {}", e))?
+    let url = format!("{}/{}", API, category);
+    let response = client.get(&url).send().map_err(|e| format!("Request failed: {}", e))?;
+    
+    if !response.status().is_success() {
+        return Err(format!("API returned error status: {}", response.status()));
+    }
+
+    let resp: NekosResp = response
         .error_for_status()
         .map_err(|e| format!("API returned an error: {}", e))?
         .json()
@@ -60,6 +70,11 @@ pub fn fetch_image(client: &Client, category: &str) -> Result<ImageResp, String>
     resp.results
         .into_iter()
         .next()
-        .map(|img| ImageResp { url: img.url })
+        .map(|img| ImageResp { 
+            url: img.url,
+            artist_name: img.artist_name,
+            artist_href: img.artist_href,
+            source_url: img.source_url,
+        })
         .ok_or_else(|| "No images returned".to_string())
 }
