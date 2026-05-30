@@ -10,9 +10,13 @@ built using rust and uses nekos.best api\
 # Installation (Other Distros + macOS)
 1. Clone the git repository ```git clone https://github.com/izeperson/waifu-cli```
 2. cd into "waifu-cli"
-3. Run ```chmod +x run.sh``` to give executable perms to the sh file
-4. Use ```sh run.sh``` or ```./run.sh``` to start setup. (You may need to [install rust](https://rust-lang.org/tools/install/))
-5. After setup is completed, use the ```waifu``` command to use the program.
+3. Build the project: ```cargo build --release``` (You may need to [install rust](https://rust-lang.org/tools/install/))
+4. Create a symlink in `~/.local/bin`:
+<pre>
+  mkdir -p "$HOME/.local/bin"
+  ln -sf "$PWD/target/release/waifu" "$HOME/.local/bin/waifu"
+</pre>
+5. Ensure `~/.local/bin` is in your `PATH`. After setup is completed, use the `waifu` command to use the program.
 
 # Usage
 **Commands:**
