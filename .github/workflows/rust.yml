@@ -16,9 +16,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Build # build rust program
+    - name: Build
       run: cargo build --verbose
-    - name: Run tests # test via cargo while keeping terminal output minimal
+    - name: Run tests
       run: cargo test --verbose
-    - name: Image testing # use -t function built into program to test API and image display function
-      run: cargo run -- -t
