@@ -1,8 +1,8 @@
-name: Rust
+name: Rust CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main" ] # main branch
   pull_request:
     branches: [ "main" ]
 
@@ -16,7 +16,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Build
+    - name: Build # build rust program
       run: cargo build --verbose
-    - name: Run tests
+    - name: Run tests # test via cargo while keeping terminal output minimal
       run: cargo test --verbose
+    - name: Image testing # use -t function built into program to test API and image display function
+      run: cargo run -- -t
