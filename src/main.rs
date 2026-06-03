@@ -122,7 +122,7 @@ fn show_stats(client: &Client, categories: &[String]) {
 }
 
 fn check_all_endpoints(client: &Client, categories: &[String]) {
-    if let Err(_e) = client.get(API).send() {
+    if let Err(e) = client.get(API).send() {
         eprintln!("Warning: Initial connectivity check to {} failed: {}", API, e);
     }
 
@@ -389,7 +389,7 @@ fn fetch_and_display_image(client: &Client, category: &str, upscale: bool) {
 
         let img = match img_result {
             Ok(i) => i,
-            Err(_e) => {
+            Err(e) => {
                 eprintln!("Error: {}", e);
                 break;
             }
@@ -622,7 +622,7 @@ fn batch_download(client: &Client, category: &str, count: usize, filters: Downlo
                                     success = true;
                                     break;
                                 }
-                                Err(_e) => {
+                                Err(e) => {
                                     eprintln!("\nError saving '{}': {}", filename, e);
                                     break;
                                 }
