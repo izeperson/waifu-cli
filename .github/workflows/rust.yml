@@ -1,8 +1,8 @@
-name: Rust
+name: Rust CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main" ] # main branch
   pull_request:
     branches: [ "main" ]
 
