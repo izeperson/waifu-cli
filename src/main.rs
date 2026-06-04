@@ -143,7 +143,7 @@ fn check_all_endpoints(client: &Client, categories: &[String]) {
             } else {
                 false
             };
-            tx_clone.send((category_clone, is_success)).unwrap();
+            let _ = tx_clone.send((category_clone, is_success));
         }));
     }
     drop(tx);
@@ -158,27 +158,22 @@ fn check_all_endpoints(client: &Client, categories: &[String]) {
             } else {
                 println!("\x1b[31mFAILED\x1b[0m");
             }
-            io::stdout().flush().unwrap();
+            let _ = io::stdout().flush();
         }
     }
 
     for handle in handles {
-        handle.join().unwrap();
+        let _ = handle.join();
     }
     println!("\nSummary: {}/{} endpoints are healthy. Time Taken: {:.2?}", passed_count, categories.len(), start_time.elapsed());
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = build_client().unwrap_or_else(|e| { eprintln!("{}", e); std::process::exit(1); });
 
-    let ep_result = fetch_endpoints(&client);
-    let ep = match ep_result {
-        Ok(endpoints) => endpoints,
-        Err(e) => {
-            eprintln!("API Error: {}", e);
-            std::process::exit(1);
-        }
-    };
+    let ep = fetch_endpoints(&client).map_err(|e| {
+        format!("API Error: {}", e)
+    })?;
 
     let mut categories = ep.sfw;
     categories.sort();
@@ -192,8 +187,8 @@ fn main() {
 
     if args.len() < 2 {
         let category = CATEGORIES[rand::random::<usize>() % CATEGORIES.len()];
-        fetch_and_display_image(&client, category, upscale);
-        return;
+        fetch_and_display_image(&client, category, upscale)?;
+        return Ok(());
     }
 
     let command = &args[1];
@@ -204,7 +199,7 @@ fn main() {
         }
         "-r" | "--random" => {
             let category = &categories[rand::random::<usize>() % categories.len()];
-            fetch_and_display_image(&client, category, upscale);
+            fetch_and_display_image(&client, category, upscale)?;
         }
         "-o" | "--open" => {
             let category = &categories[rand::random::<usize>() % categories.len()];
@@ -264,7 +259,7 @@ fn main() {
                                     _ => i += 1,
                                 }
                             }
-                            batch_download(&client, category_name, amount, filters)
+                            batch_download(&client, category_name, amount, filters)?
                         },
                         Err(_e) => {
                             eprintln!("Error: Invalid amount '{}'.", amount_str);
@@ -272,7 +267,7 @@ fn main() {
                         }
                     }
                 } else {
-                    fetch_and_display_image(&client, category_name, upscale);
+                    fetch_and_display_image(&client, category_name, upscale)?;
                 }
             } else {
                 eprintln!("Error: Invalid category '{}'.", category_name);
@@ -289,6 +284,7 @@ fn main() {
             std::process::exit(1);
         }
     }
+    Ok(())
 }
 
 fn print_help() {
@@ -379,7 +375,7 @@ fn render_image(bytes: &[u8], cols: u16, rows: u16, is_interactive: bool, upscal
     false
 }
 
-fn fetch_and_display_image(client: &Client, category: &str, upscale: bool) {
+fn fetch_and_display_image(client: &Client, category: &str, upscale: bool) -> Result<(), Box<dyn std::error::Error>> {
     let _ = execute!(io::stdout(), EnterAlternateScreen, Hide);
     let mut last_bytes: Vec<u8> = Vec::new();
 
@@ -425,29 +421,29 @@ fn fetch_and_display_image(client: &Client, category: &str, upscale: bool) {
         }
 
         let mut continue_fetching = false;
-        terminal::enable_raw_mode().unwrap();
+        terminal::enable_raw_mode()?;
 
         'input: loop {
-            let print_prompt = || {
+            let print_prompt = || -> io::Result<()> {
                 let prompt = "[s]ave | [u]rl | [a]rtist | [o]pen | [n]ext | [q]uit:";
                 let (c, r) = size().unwrap_or((80, 24));
                 let p_padding = c.saturating_sub(prompt.len() as u16) / 2;
-                let _ = execute!(
+                execute!(
                     io::stdout(),
                     MoveTo(p_padding, r.saturating_sub(1)),
                     terminal::Clear(terminal::ClearType::CurrentLine)
-                );
+                )?;
                 print!("{}", prompt);
-                io::stdout().flush().unwrap();
+                io::stdout().flush()
             };
 
-            print_prompt();
+            let _ = print_prompt();
 
             if let Ok(ev) = event::read() {
                 match ev {
                     Event::Key(key_event) => match key_event.code {
                     KeyCode::Char('s') => {
-                        terminal::disable_raw_mode().unwrap();
+                        let _ = terminal::disable_raw_mode();
                         let _ = execute!(io::stdout(), MoveToColumn(0), terminal::Clear(terminal::ClearType::CurrentLine));
                         let filename = img.url.split('/').last().unwrap_or("waifu.png");
                         if std::fs::write(filename, &bytes).is_ok() {
@@ -456,19 +452,19 @@ fn fetch_and_display_image(client: &Client, category: &str, upscale: bool) {
                         } else {
                             eprintln!("Error: Failed to save image.");
                         }
-                        terminal::enable_raw_mode().unwrap();
+                        let _ = terminal::enable_raw_mode();
                         continue 'input;
                     }
                     KeyCode::Char('u') => {
-                        terminal::disable_raw_mode().unwrap();
+                        let _ = terminal::disable_raw_mode();
                         let _ = execute!(io::stdout(), MoveToColumn(0), terminal::Clear(terminal::ClearType::CurrentLine));
                         println!("\nImage URL: {}", img.url);
-                        terminal::enable_raw_mode().unwrap();
-                        print_prompt();
+                        let _ = terminal::enable_raw_mode();
+                        let _ = print_prompt();
                         continue 'input;
                     }
                     KeyCode::Char('a') => {
-                        terminal::disable_raw_mode().unwrap();
+                        let _ = terminal::disable_raw_mode();
                         let _ = execute!(io::stdout(), MoveToColumn(0), terminal::Clear(terminal::ClearType::CurrentLine));
                         println!("--- Metadata ---");
                         println!("Artist: {}", img.artist_name.as_deref().unwrap_or("Unknown"));
@@ -477,9 +473,9 @@ fn fetch_and_display_image(client: &Client, category: &str, upscale: bool) {
                         println!("----------------");
                         println!("(Press any key to return)");
                         let _ = event::read();
-                        terminal::enable_raw_mode().unwrap();
+                        let _ = terminal::enable_raw_mode();
                         let _ = execute!(io::stdout(), terminal::Clear(terminal::ClearType::FromCursorUp));
-                        print_prompt();
+                        let _ = print_prompt();
                         continue 'input;
                     }
                     KeyCode::Char('o') => {
@@ -510,7 +506,7 @@ fn fetch_and_display_image(client: &Client, category: &str, upscale: bool) {
             }
         }
 
-        terminal::disable_raw_mode().unwrap();
+        let _ = terminal::disable_raw_mode();
         println!();
 
         last_bytes = bytes.clone();
@@ -523,15 +519,15 @@ fn fetch_and_display_image(client: &Client, category: &str, upscale: bool) {
 
     let _ = execute!(io::stdout(), LeaveAlternateScreen, Show);
 
-    // Print the last viewed image to the main terminal buffer on exit
     if !last_bytes.is_empty() {
         let (cols, rows) = size().unwrap_or((80, 24));
         render_image(&last_bytes, cols, rows, false, upscale);
         last_bytes.zeroize();
     }
+    Ok(())
 }
 
-fn batch_download(client: &Client, category: &str, count: usize, filters: DownloadFilters) {
+fn batch_download(client: &Client, category: &str, count: usize, filters: DownloadFilters) -> Result<(), Box<dyn std::error::Error>> {
     println!(
         "Starting batch download of {} images from category '{}'...",
         count, category
@@ -543,23 +539,19 @@ fn batch_download(client: &Client, category: &str, count: usize, filters: Downlo
 
     while urls.len() < count {
         let request_amount = std::cmp::min(count - urls.len(), 20);
-        let resp_result: Result<ManyResp, _> = client
+        let mut data: ManyResp = client
             .get(format!("{}/{}?amount={}", API, category, request_amount))
-            .send()
-            .and_then(|resp| resp.json());
+            .send()?
+            .json()?;
 
-        if let Ok(mut data) = resp_result {
-            if data.results.is_empty() {
-                break;
-            }
-
-            data.results
-                .retain(|img| seen_urls.insert(img.url.clone()));
-
-            urls.extend(data.results.into_iter().map(|img| img.url));
-        } else {
+        if data.results.is_empty() {
             break;
         }
+
+        data.results
+            .retain(|img| seen_urls.insert(img.url.clone()));
+
+        urls.extend(data.results.into_iter().map(|img| img.url));
 
         if urls.len() >= count {
             break;
@@ -570,8 +562,7 @@ fn batch_download(client: &Client, category: &str, count: usize, filters: Downlo
     let count = urls.len();
 
     if count == 0 {
-        eprintln!("Failed to fetch image URLs.");
-        return;
+        return Err("Failed to fetch image URLs from the API.".into());
     }
 
     let workers = std::cmp::min(count, 32);
@@ -580,7 +571,7 @@ fn batch_download(client: &Client, category: &str, count: usize, filters: Downlo
     let (res_tx, res_rx) = mpsc::channel();
 
     for url in urls {
-        job_tx.send(url).unwrap();
+        let _ = job_tx.send(url);
     }
     drop(job_tx);
 
@@ -589,16 +580,18 @@ fn batch_download(client: &Client, category: &str, count: usize, filters: Downlo
     for _ in 0..workers {
         let job_rx = Arc::clone(&job_rx);
         let res_tx = res_tx.clone();
+        let thread_client = client.clone();
 
         handles.push(thread::spawn(move || {
-            let client = build_client().unwrap_or_else(|e| { eprintln!("{}", e); std::process::exit(1); });
+            let client = thread_client;
             loop {
                 let url = {
-                    let lock = job_rx.lock().unwrap();
-                    match lock.recv() {
-                        Ok(u) => u,
-                        Err(_) => break,
-                    }
+                    if let Ok(lock) = job_rx.lock() {
+                        match lock.recv() {
+                            Ok(u) => u,
+                            Err(_) => break,
+                        }
+                    } else { break; }
                 };
 
                 let start = Instant::now();
@@ -650,7 +643,7 @@ fn batch_download(client: &Client, category: &str, count: usize, filters: Downlo
 
         print!("\r[{}] {}% | Downloaded {}/{} | Speed: {:.2} MB/s",
             bar, percentage, i + 1, count, speed);
-        io::stdout().flush().unwrap();
+        let _ = io::stdout().flush();
     }
 
     for h in handles {
@@ -662,4 +655,5 @@ fn batch_download(client: &Client, category: &str, count: usize, filters: Downlo
         count,
         start_time.elapsed()
     );
+    Ok(())
 }
