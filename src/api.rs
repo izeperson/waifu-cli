@@ -3,16 +3,6 @@ use serde::Deserialize;
 
 pub const API: &str = "https://nekos.best/api/v2";
 
-pub const CATEGORIES: &[&str] = &[
-    "neko", "husbando", "kitsune", "waifu",
-    "blush", "clap", "confused", "cry", "dance",
-    "feed", "happy", "highfive", "hug", "kiss",
-    "laugh", "lurk", "pat", "peck", "poke",
-    "punch", "shoot", "shrug", "sip", "sleep",
-    "smile", "smug", "stare", "think", "tickle",
-    "wave", "wink", "yeet",
-];
-
 #[derive(Debug, Deserialize)]
 pub struct Endpoints {
     pub sfw: Vec<String>,
@@ -46,12 +36,22 @@ pub fn build_client() -> Result<Client, String> {
         .map_err(|e| format!("Failed to build client: {}", e))
 }
 
-pub fn fetch_endpoints(_client: &Client) -> Result<Endpoints, String> {
-    Ok(Endpoints {
-        sfw: CATEGORIES.iter().map(|s| s.to_string()).collect(),
-    })
-}
+pub fn fetch_endpoints(client: &Client) -> Result<Endpoints, String> {
+    let url = format!("{}/endpoints", API);
+    let response = client.get(&url).send().map_err(|e| format!("Request failed: {}", e))?;
+    
+    if !response.status().is_success() {
+        return Err(format!("API returned error status for endpoints: {}", response.status()));
+    }
+    
+    let categories_map: std::collections::HashMap<String, serde::de::IgnoredAny> = response
+        .json()
+        .map_err(|e| format!("Failed to decode endpoints response: {}", e))?;
 
+    let sfw_categories: Vec<String> = categories_map.into_keys().collect();
+
+    Ok(Endpoints { sfw: sfw_categories })
+}
 pub fn fetch_image(client: &Client, category: &str) -> Result<ImageResp, String> {
     let url = format!("{}/{}", API, category);
     let response = client.get(&url).send().map_err(|e| format!("Request failed: {}", e))?;

@@ -15,7 +15,6 @@ use crossterm::{
     terminal::{self, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use zeroize::Zeroize;
-use api::CATEGORIES;
 
 mod api;
 use api::{fetch_endpoints, fetch_image, build_client, API};
@@ -186,7 +185,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     if args.len() < 2 {
-        let category = CATEGORIES[rand::random::<usize>() % CATEGORIES.len()];
+        let category = &categories[rand::random::<usize>() % categories.len()];
         fetch_and_display_image(&client, category, upscale)?;
         return Ok(());
     }
