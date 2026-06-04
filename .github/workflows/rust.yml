@@ -8,6 +8,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true # update CI/CD flow to node24 so that the stupid warning at the top of the build action disappears
 
 jobs:
   build:
